@@ -1,0 +1,607 @@
+variables:
+    
+    {playercount} = 24
+        
+command /splitlife:colorfix:
+    permission: op
+    trigger:
+        loop all players:
+            limitedColors(loop-player)
+            coloredLives(loop-player)
+            
+on craft enchanting table:
+    cancel the event
+
+on load:
+    execute console command "/team add SplitFour+Life ""SplitFour+Life"""
+    execute console command "/team add SplitThreeLife ""SplitThreeLife"""
+    execute console command "/team add SplitTwoLife ""SplitTwoLife"""
+    execute console command "/team add SplitOneLife ""SplitOneLife"""
+    execute console command "/team add SplitDead ""SplitDead"""
+    execute console command "/team modify SplitFour+Life color dark_green"
+    execute console command "/team modify SplitThreeLife color green"
+    execute console command "/team modify SplitTwoLife color yellow"
+    execute console command "/team modify SplitOneLife color red"
+    execute console command "/team modify SplitDead color gray"
+    execute console command "/team modify SplitFour+Life seeFriendlyInvisibles false"
+    execute console command "/team modify SplitThreeLife seeFriendlyInvisibles false"
+    execute console command "/team modify SplitTwoLife seeFriendlyInvisibles false"
+    execute console command "/team modify SplitOneLife seeFriendlyInvisibles false"
+    loop all players:
+        limitedColors(loop-player)
+        coloredLives(loop-player)
+    
+
+command /splitlife:startgui:
+    permission: op
+    trigger:
+        set {SplitGUI.%player%} to chest inventory with 8 rows named "&8SplitLife Control Panel"
+        set {_slots::*} to integers from 0 to 71
+        loop {_slots::*}:
+            set slot loop-value of {SplitGUI.%player%} to black stained glass pane named " "
+        if {playercount} = 24:
+            set slot 10 of {SplitGUI.%player%} to green concrete named "&aPlayer Count (24)"
+        else if {playercount} = 16:
+            set slot 10 of {SplitGUI.%player%} to yellow concrete named "&ePlayer Count (16)"
+        else:
+            set slot 10 of {SplitGUI.%player%} to red concrete named "&cPlayer Count (8)"
+        set slot 49 of {SplitGUI.%player%} to lime stained glass pane named "&a&lStart Game"
+        open {SplitGUI.%player%} to player
+        
+        
+on inventory click:
+    if event-inventory is {SplitGUI.%player%}:
+        cancel the event
+        if event-item is lime stained glass pane named "&a&lStart Game":
+            close the player's inventory
+            splitStart()
+        if event-item is slot 10 of {SplitGUI.%player%}:
+            if {playercount} = 24:
+                set {playercount} to 8
+                set slot 10 of {SplitGUI.%player%} to red concrete named "&cPlayer Count (8)"
+                play sound "block.note_block.bass" to the player
+            else if {playercount} = 16:
+                set {playercount} to 24
+                set slot 10 of {SplitGUI.%player%} to green concrete named "&aPlayer Count (24)"
+                play sound "block.note_block.bass" to the player
+            else:
+                set {playercount} to 16
+                set slot 10 of {SplitGUI.%player%} to yellow concrete named "&ePlayer Count (16)"
+                play sound "block.note_block.bass" to the player
+        
+
+            
+function splitStart():
+
+    clear {_players::*}
+    clear {1::*}
+    clear {2::*}
+    clear {3::*}
+    clear {4::*}
+    send title "&a3..." to all players
+    play sound "block.note_block.hat" at all players
+    wait 1.5 seconds
+    send title "&a2..." to all players
+    play sound "block.note_block.hat" at all players
+    wait 1.5 seconds
+    send title "&a1..." to all players
+    play sound "block.note_block.hat" at all players
+    wait 3 seconds
+    send title "&aYou are playing..." to all players
+    play sound "block.note_block.hat" at all players
+    wait 3 seconds
+    loop 110 times:
+        set {_game} to a random integer between 1 and 4
+        play sound "block.note_block.hat" at all players
+        if {_game} = 1:
+            send title "&aThird Life" to all players with fadein 0.2 second
+        else if {_game} = 2:
+            send title "&2Last Life" to all players with fadein 0.2 second
+        else if {_game} = 3:
+            send title "&cDouble Life" to all players with fadein 0.2 second
+        else if {_game} = 4:
+            send title "&7Limited Life" to all players with fadein 0.2 second
+        if loop-iteration < 50:
+            wait 0.05 seconds
+        else if loop-iteration < 70:
+            wait 0.1 seconds
+        else if loop-iteration < 85:
+            wait 0.2 seconds
+        else if loop-iteration < 95:
+            wait 0.3 seconds
+        else if loop-iteration < 100:
+            wait 0.5 seconds
+        else if loop-iteration < 105:
+            wait 0.8 seconds
+        else if loop-iteration <= 108:
+            wait 2 seconds
+        else if loop-iteration = 110:
+            wait 3 seconds
+    loop all players:
+        gameAssign(loop-player)
+        play sound "entity.lightning_bolt.thunder" at volume 2 to the loop-player
+        if {game.%loop-player%} = 1:
+            send title "&aThird Life" to loop-player
+            set {lives.%loop-player%} to 3
+        else if {game.%loop-player%} = 2:
+            send title "&2Last Life" to loop-player
+        else if {game.%loop-player%} = 3:
+            send title "&cDouble Life" to loop-player
+            set {lives.%loop-player%} to 3
+        else if {game.%loop-player%} = 4:
+            send title "&7Limited Life" to loop-player
+    loop all players:
+        if {game.%loop-player%} = 1:
+            set {lives.%loop-player%} to 3
+            coloredLives(loop-player)
+        else if {game.%loop-player%} = 2:
+            lastRoll(loop-player)
+        else if {game.%loop-player%} = 3:
+            doubleAssign(loop-player)
+        else if {game.%loop-player%} = 4:
+            limitedSet(loop-player)
+        if {debugging} is true:
+            send {game.%loop-player%} to {debugger}
+        send {game.%loop-player%} to the console
+    wait 20 seconds
+    loop 3 times:
+        add a random element out of {doubleplayers::*} to {pairs::A::*}
+        remove {pairs::A::*} from {doubleplayers::*}
+        add a random element out of {doubleplayers::*} to {pairs::B::*}
+        remove {pairs::B::*} from {doubleplayers::*}
+        
+            
+function gameAssign(p: player):
+
+    set {game.%{_p}%} to a random integer between 1 and 4
+    if {playercount} = 24:
+        if size of {%{game.%{_p}%}%::*} is less than 6:
+            add {_p} to {%{game.%{_p}%}%::*}
+        else:
+            gameAssign({_p})
+    else if {playercount} = 16:
+        if size of {%{game.%{_p}%}%::*} is less than 4:
+            add {_p} to {%{game.%{_p}%}%::*}
+        else:
+            gameAssign({_p})
+    else:
+        if size of {%{game.%{_p}%}%::*} is less than 2:
+            add {_p} to {%{game.%{_p}%}%::*}
+        else:
+            gameAssign({_p})
+            
+            
+
+# Life Logic
+
+function coloredLives(p: player):
+
+    if {game.%{_p}%} isn't 4:
+        if {lives.%{_p}%} >= 4:
+            execute console command "/team join SplitFour+Life %{_p}%"
+        else if {lives.%{_p}%} = 3:
+            execute console command "/team join SplitThreeLife %{_p}%"
+        else if {lives.%{_p}%} = 2:
+            execute console command "/team join SplitTwoLife %{_p}%"
+        else if {lives.%{_p}%} = 1:
+            execute console command "/team join SplitOneLife %{_p}%"
+        else if {lives.%{_p}%} <= 0:
+            execute console command "/team join SplitDead %{_p}%"
+            set {_p}'s gamemode to spectator
+            strike lightning effect at {_p}'s location
+            send title "&c%{_p}% is out of lives!" to all players
+        
+on death of player:
+    if {game.%victim%} = 4:
+        if {hours.%victim%} != 1:
+            if {hours.%victim%} < 8:
+                keep the inventory
+                cancel drops of items
+        if {boogies::*} contains the attacker:
+            subtract 2 from {hours.%victim%}
+            send title "&c-2 Hours!" to the victim
+        else:
+            subtract 1 from {hours.%victim%}
+            send title "&c-1 Hour!" to the victim
+        force the victim to respawn
+        limitedColors(victim)
+    if {game.%attacker%} = 4:
+        if {boogies::*} contains the attacker:
+            send title "&aYou're Cured! +1 Hour!" to the attacker
+            add 1 to {hours.%attacker%}
+            remove the attacker from {boogies::*}
+        else:
+            send title "&a+30 Minutes!" to the attacker
+            add 30 to {minutes.%attacker%}
+    else:
+        if {boogies::*} contains the attacker:
+            send "&aYou are Cured!" to the attacker
+            remove the attacker from {boogies::*}
+    subtract 1 from {lives.%victim%}
+    coloredLives(victim)
+
+# Last Life Logic
+
+function lastRoll(p: player):
+    
+    wait 10 seconds
+    send title "&aYou will have..." to {_p}
+    wait 2 seconds
+    loop 80 times:
+        set {_lives} to a random integer between 2 and 6
+        play sound "block.note_block.hat" at {_p}
+        if {_lives} = 2:
+            send title "&e2" to {_p} with fadein 0.2 second
+        else if {_lives} = 3:
+            send title "&a3" to {_p} with fadein 0.2 second
+        else if {_lives} = 4:
+            send title "&24" to {_p} with fadein 0.2 second
+        else if {_lives} = 5:
+            send title "&25" to {_p} with fadein 0.2 second
+        else if {_lives} = 6:
+            send title "&26" to {_p} with fadein 0.2 second
+        if loop-iteration < 38:
+            wait 0.05 seconds
+        else if loop-iteration < 45:
+            wait 0.1 seconds
+        else if loop-iteration < 55:
+            wait 0.2 seconds
+        else if loop-iteration < 65:
+            wait 0.3 seconds
+        else if loop-iteration < 70:
+            wait 0.5 seconds
+        else if loop-iteration < 75:
+            wait 0.8 seconds
+        else if loop-iteration <= 78:
+            wait 2 seconds
+        else if loop-iteration = 80:
+            wait 3 seconds
+    set {lives.%{_p}%} to a random integer between 2 and 6
+    play sound "entity.lightning_bolt.thunder" at volume 2 to {_p}
+    if {lives.%{_p}%} = 2:
+        send title "&e2 Lives!" to {_p} for 5 seconds with fadein 1 second
+    else if {lives.%{_p}%} = 3:
+        send title "&a3 Lives!" to {_p} for 5 seconds with fadein 1 second
+    else if {lives.%{_p}%} = 4:
+        send title "&24 Lives!" to {_p} for 5 seconds with fadein 1 second
+    else if {lives.%{_p}%} = 5:
+        send title "&25 Lives!" to {_p} for 5 seconds with fadein 1 second
+    else if {lives.%{_p}%} = 6:
+        send title "&26 Lives!" to {_p} for 5 seconds with fadein 1 second
+    coloredLives({_p})
+    
+
+# Limited Life Logic
+
+function limitedSet(p: player):
+    
+    set {hours.%{_p}%} to 24
+    set {minutes.%{_p}%} to 0
+    set {seconds.%{_p}%} to 0
+    
+function limitedColors(p: player):
+    
+    if {hours.%{_p}%} >= 16:
+        execute console command "/team join SplitThreeLife %{_p}%"
+    else if {hours.%{_p}%} >= 8:
+        execute console command "/team join SplitTwoLife %{_p}%"
+    else if {hours.%{_p}%} >= 0:
+        execute console command "/team join SplitOneLife %{_p}%"
+    else:
+        execute console command "/team join SplitDead %{_p}%"
+    
+    
+
+    
+every second:
+    loop all players:
+        if {timerpaused} is true:
+            if {game.%loop-player%} = 4:
+                if the loop-player's gamemode is survival:
+                    subtract 1 from {seconds.%loop-player%}
+                    if {seconds.%loop-player%} < 0:
+                        subtract 1 from {minutes.%loop-player%}
+                        set {seconds.%loop-player%} to 59
+                    if {minutes.%loop-player%} < 0:
+                        subtract 1 from {hours.%loop-player%}
+                        set {minutes.%loop-player%} to 59
+                    if {hours.%loop-player%} < 0:
+                        strike lightning effect at loop-player
+                        set loop-player's gamemode to spectator
+                        send title "&c%loop-player% is out of time!" to all players
+                    if {seconds.%loop-player%} > 59:
+                        add 1 to {minutes.%loop-player%}
+                    if {minutes.%loop-player%} > 59:
+                        add 1 to {hours.%loop-player%}
+                        subtract 60 from {minutes.%loop-player%}
+                    if {hours.%loop-player%} >= 16:
+                        send action bar "&a&l%{hours.%loop-player%}%:%{minutes.%loop-player%}%:%{seconds.%loop-player%}%" to the loop-player
+                        if {minutes.%loop-player%} = 59:
+                            if {seconds.%loop-player%} = 59:
+                                execute console command "/team join SplitThreeLife %loop-player%"
+                    else if {hours.%loop-player%} >= 8:
+                        send action bar "&e&l%{hours.%loop-player%}%:%{minutes.%loop-player%}%:%{seconds.%loop-player%}%" to the loop-player
+                        if {minutes.%loop-player%} = 59:
+                            if {seconds.%loop-player%} = 59:
+                                execute console command "/team join SplitTwoLife %loop-player%"
+                    else if {hours.%loop-player%} >= 0:
+                        send action bar "&c&l%{hours.%loop-player%}%:%{minutes.%loop-player%}%:%{seconds.%loop-player%}%" to the loop-player
+                        if {minutes.%loop-player%} = 59:
+                            if {seconds.%loop-player%} = 59:
+                                execute console command "/team join SplitOneLife %loop-player%"
+                        else if {minutes.%loop-player%} < 0:
+                            if {seconds.%loop-player%} < 0:
+                                execute console command "/team join SplitDead %loop-player%"
+                
+
+# Boogeyman Logic
+
+command /Splitlife:BoogeyGUI:
+    permission: op
+    trigger:
+        set {boogeyGUI.%player%} to chest inventory with 8 rows named "&8Boogeyman Control Panel"
+        set slot 10 of {boogeyGUI.%player%} to black stained glass pane named "&0&lBoogeyman Roll"
+        set slot 13 of {boogeyGUI.%player%} to lime stained glass pane named "&a&lBoogeyman Cure"
+        set slot 16 of {boogeyGUI.%player%} to red stained glass pane named "&c&lBoogeyman Fail"
+        set slot 40 of {boogeyGUI.%player%} to magenta stained glass pane named "&dSee Who The Boogeyman Is"
+        open {boogeyGUI.%player%} to player
+        
+on inventory click:
+    if event-inventory is {boogeyGUI.%player%}:
+        cancel the event
+    if event-item is black stained glass pane named "&0&lBoogeyman Roll":
+        boogeyRoll()
+    if event-item is red stained glass pane named "&c&lBoogeyman Fail":
+        loop {boogies::*}:
+            send title "&cYou have Failed!" to loop-value
+            if {game.%loop-value%} = 4:
+                subtract 8 from {hours.%loop-value%}
+            else if {game.%loop-value%} = 2:
+                set {lives.%loop-value%} to 1
+                coloredLives(loop-value)
+        clear {boogies::*}
+    if event-item is lime stained glass pane named "&a&lBoogeyman Cure":
+        loop {boogies::*}:
+            send title "&aYou are Cured!" to loop-value
+            if {game.%loop-value%} = 4:
+                add 2 to {hours.%{loop-value}%}
+        clear {boogies::*}
+    if event-item is magenta stained glass pane named "&dSee Who The Boogeyman Is":
+        set {boogeyseeGUI.%player%} to chest inventory with 8 rows named "&8Boogeyman Overseer"
+        set slot 31 of {boogeyseeGUI.%player%} to red stained glass pane named "&c%{boogies::*}%"
+        open {boogeyseeGUI.%player%} to the player
+        
+function boogeyRoll():
+
+    loop all players:
+        if {game.%loop-player%} is 2:
+            if {lives.%loop-player%} > 1:
+                add loop-player to {possibleboogies::*}
+        else if {game.%loop-player%} is 4:
+            if {hours.%loop-player%} >= 9:
+                add loop-player to {possibleboogies::*}
+    broadcast "&c&lThe Boogeyman will be chosen in 10 minutes!"
+    wait 5 minutes
+    broadcast "&c&lThe Boogeyman will be chosen in 5 minutes!"
+    wait 4 minutes
+    broadcast "&c&lThe Boogeyman will be chosen in 1 minutes!"
+    play sound "entity.lightning_bolt.thunder" to all players
+    wait 50 seconds
+    broadcast "&c&lThe Boogeyman is about to be chosen!"
+    wait 7 seconds
+    send title "&e3..." to all players
+    play sound "block.note_block.hat" to all players
+    wait 1.5 seconds
+    send title "&e2..." to all players
+    play sound "block.note_block.hat" to all players
+    wait 1.5 seconds
+    send title "&e1..." to all players
+    play sound "block.note_block.hat" to all players
+    wait 3 seconds
+    send title "&eYou are..." to all players
+    play sound "block.note_block.hat" to all players
+    set {_times} to 1
+    chance of 50%:
+        set {_times} to 2
+        chance of 50%:
+            set {_times} to 3
+    loop {_times} times:
+        add a random element out of {possibleboogies::*} to {boogies::*}
+        loop {boogies::*}:
+            if {possibleboogies::*} contains loop-value-2:
+                remove the loop-value-2 from {possibleboogies::*}
+    clear {possibleboogies::*}
+    loop all players:
+        if {boogies::*} contains the loop-player:
+            send title "&cThe Boogeyman!" to the loop-player for 5 seconds with fadein 1 second
+            wait 2 seconds
+            send "&7You are the boogeyman. You must by any means necessary kill a &agreen &7or &eyellow &7name by direct action to be cured of the curse. If you fail, next session you will become a red name. All loyalties and friendships are removed while you are the boogeyman." to the loop-player
+        else:
+            send title "&aNOT The Boogeyman..." to the loop-player
+            
+# fucking double life
+
+function doubleAssign(p: player):
+    
+    clear {doubleplayers::*}
+    clear {pairs::A::*}
+    clear {pairs::B::*}
+    wait 10 seconds
+    send title "&a3..." to {_p}
+    play sound "block.note_block.hat" to {_p}
+    wait 1.5 seconds
+    send title "&a2..." to {_p}
+    play sound "block.note_block.hat" to {_p}
+    wait 1.5 seconds
+    send title "&a1..." to {_p}
+    play sound "block.note_block.hat" to {_p}
+    wait 3 seconds
+    send title "&aYour soulmate is..." to {_p}
+    wait 3 seconds
+    send title "&a???" to {_p} with fadein 1 second
+    set {lives.%{_p}%} to 3
+    coloredLives({_p})
+    add {_p} to {doubleplayers::*}
+        
+on damage:
+    wait 1 tick
+    if victim isn't blocking:
+        if damage cause isn't unknown:
+            if {pairs::A::*} contains the victim:
+                loop {pairs::A::*}:
+                    if loop-value is the victim:
+                        if {pairs::B::%loop-iteration%} is online:
+                            damage {pairs::B::%loop-iteration%} by the damage
+            else if {pairs::B::*} contains the victim:
+                loop {pairs::B::*}:
+                    if loop-value is the victim:
+                        if {pairs::A::%loop-iteration%} is online:
+                            damage {pairs::A::%loop-iteration%} by the damage
+        # there is definitely an easier fucking way to do this shit
+        if {debugging} is true:
+            send "%victim%, %damage cause%" to {debugger}
+            send "%victim%, %damage%" to {debugger}
+    
+on heal:
+    wait 1 tick
+    if heal reason isn't unknown:
+        if {pairs::A::*} contains the player:
+            loop {pairs::A::*}:
+                if loop-value is the player:
+                    if {pairs::B::%loop-iteration%} is online:
+                        heal {pairs::B::%loop-iteration%} by the heal amount
+                        set {pairs::B::%loop-iteration%}'s health to the player's health
+                        # i forgor to set it to pairs::A not pairs::B
+        else if {pairs::B::*} contains the player:
+            loop {pairs::B::*}:
+                if loop-value is the player:
+                    if {pairs::A::%loop-iteration%} is online:
+                        heal {pairs::A::%loop-iteration%} by the heal amount
+                        set {pairs::A::%loop-iteration%}'s health to the player's health
+                        # i forgor to set it to pairs::A not pairs::B
+    if {debugging} is true:
+        send heal reason to {debugger}
+        send heal amount to {debugger}
+        send player to {debugger}
+        
+every 5 seconds:
+    loop {pairs::B::*}:
+        if {pairs::B::%loop-iteration%} is online:
+            if {pairs::A::%loop-iteration%} is online:
+                set {pairs::B::%loop-iteration%}'s health to {pairs::A::%loop-iteration%}'s health
+
+        
+# good commands bc they're currently just fucking spread everywhere
+
+command /splitlife:editlives <player> <integer>:
+    permission: op
+    trigger:
+        if {game.%arg-1%} <= 2:
+            set {lives.%arg-1%} to arg-2
+        else if {game.%arg-1%} = 3:
+            if {pairs::A::*} contains arg-1:
+                loop {pairs::A::*}:
+                    if loop-value is arg-1:
+                        set {lives.%arg-1%} to arg-2
+                        set {lives.%{pairs::B::%loop-iteration%}%} to arg-2
+                        coloredLives({pairs::B::%loop-iteration%})
+            else if {pairs::B::*} contains arg-1:
+                loop {pairs::B::*}:
+                    if loop-value is arg-1:
+                        set {lives.%arg-1%} to arg-2
+                        set {lives.%{pairs::A::%loop-iteration%}%} to arg-2
+                        coloredLives({pairs::A::%loop-iteration%})
+            else:
+                send "&cERROR, Player not found in double life lists!"
+        else:
+            send "&cERROR, Player is either playing Limited Life or doesn't have an assigned game!"
+        coloredLives(arg-1)
+            
+command /splitlife:editgame <player> <integer>: # please for the love of god no one mix this up with editlives
+    permission: op
+    trigger:
+        if arg-2 <= 4: # note to self, don't say arg-2 is <= 4. using "to" makes the compiler throw a fucking hissy fit
+            set {game.%arg-1%} to arg-2
+        else:
+            send "&cERROR, please use numbers 1-4. Ask Kort for the specific game numbers bc im not putting them here :)"
+            
+command /splitlife:pair <player> <player>:
+    permission: op
+    trigger:
+        if {pairs::A::*} doesn't contain arg-1:
+            if {pairs::B::*} doesn't contain arg-1:
+                if {pairs::A::*} doesn't contain arg-2:
+                    if {pairs::B::*} doesn't contain arg-2:
+                        add arg-1 to {pairs::A::*}
+                        add arg-2 to {pairs::B::*}
+                        send "&aPaired the players!"
+                        # This won't fuck up as long as someone isn't incompetent enough to try and pair someone while someone else in a list doesn't have one.
+                        # If they are, then get fucked you gotta reroll double life
+                    else:
+                        send "&cERROR, %arg-2% is already paired!"
+                else:
+                    send "&cERROR, %arg-2% is already paired!"
+            else:
+                send "&cERROR, %arg-1% is already paired!"
+        else:
+            send "&cERROR, %arg-1% is already paired!"
+            
+command /splitlife:unpair <offline player>:
+    permission: op
+    trigger:
+        if {pairs::A::*} contains arg-1:
+            remove arg-1 from {pairs::A::*}
+            send "&cRemoved %arg-1% from their pair! (This doesn't remove their soulmate, if you want them gone aswell you must run the command with them aswell.)"
+        else if {pairs::B::*} contains arg-1:
+            remove arg-1 from {pairs::B::*}
+            send "&cRemoved %arg-1% from their pair! (This doesn't remove their soulmate, if you want them gone aswell you must run the command with them aswell.)"
+        else:
+            send "&cERROR, Could not find player in Double Life!"
+            
+command /splitlife:doublepair:
+    permission: op
+    trigger:
+        send "&a%{pairs::A::*}%"
+        send "&e%{pairs::B::*}%"
+        
+command /splitlife:timeredit <player> <integer>: # This adds a time amount in minutes to a player. Knowing the wracks though, someones gonna fuck it up somehow and its gonna be copa.
+    permission: op
+    trigger:
+        if {game.%arg-1%} = 4:
+            add arg-2 to {minutes.%arg-1%}
+            if arg-2 < 0:
+                send title "&c-%arg-2% Minutes!" to arg-1
+            else:
+                send title "&c+%arg-2% Minutes!" to arg-1
+                
+command /splitlife:timerpause:
+    permission: op
+    trigger:
+        if {timerpaused} is false:
+            set {timerpaused} to true
+            broadcast "&aLimited Life Timer Unpaused!"
+        else:
+            set {timerpaused} to false
+            broadcast "&cLimited Life Timer Paused!"
+
+command /givelife <player>:
+    trigger:
+        if {game.%player%} = 2:
+            if {game.%arg-1%} = 2:
+                subtract 1 from {lives.%player%}
+                add 1 to {lives.%arg-1%}
+                send title "&aYou've Recieved A Life!" to arg-1
+                play sound "minecraft:item.totem.use" to the player
+            else:
+                send "&cYou cannot do this, the player you've chosen isn't playing Last Life!"
+        else:
+            send "&cYou cannot do this, you aren't playing Last Life!"
+                
+
+command /splitlife:limitedreset <player>:
+    permission: op
+    trigger:
+        set {hours.%arg-1%} to 24
+        set {minutes.%arg-1%} to 0
+        set {seconds.%arg-1%} to 0
+        
