@@ -6,4 +6,4 @@ At times, this plugin can be VERY tricky and unoptimized, so its best to keep a 
 
 If you use this plugin, please give credit, this was a bitch to code.
 
-The plugin is WracksSplitlife.sk, and requires the Skript plugin itself which you can find [https://github.com/SkriptLang/Skript](here)
+The plugin is WracksSplitlife.sk, and requires the Skript plugin itself which you can find [here](https://github.com/SkriptLang/Skript)
